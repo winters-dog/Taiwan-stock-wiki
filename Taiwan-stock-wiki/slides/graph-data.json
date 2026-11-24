@@ -1,0 +1,226 @@
+{
+  "version": "2.0.0",
+  "title": "Taiwan Stock Wiki Knowledge Graph",
+  "nodes": [
+    {
+      "id": "cover",
+      "title": "台股投資入門：從零開始學會看懂股票",
+      "short_title": "封面導讀",
+      "category": "meta",
+      "wiki_file": "wiki/index.md",
+      "summary": "以圖譜驅動（Graph-based）全新架構建立理性客觀的台股投資認知體系。",
+      "x": 100,
+      "y": 300,
+      "story_index": 1
+    },
+    {
+      "id": "stock-basics",
+      "title": "什麼是股票？",
+      "short_title": "股票基本概念",
+      "category": "basics",
+      "wiki_file": "wiki/basics/stock-basics.md",
+      "summary": "股份有限公司籌資憑證、股東所有權與有限清償責任，股價由供需撮合形成。",
+      "x": 260,
+      "y": 200,
+      "story_index": 2
+    },
+    {
+      "id": "tw-market-system",
+      "title": "台灣股票市場與交易制度",
+      "short_title": "市場與交易制度",
+      "category": "market",
+      "wiki_file": "wiki/market/tw-market-system.md",
+      "summary": "上市櫃集中市場架構、標準交易四部曲、T+2交割與零股交易機制。",
+      "x": 420,
+      "y": 140,
+      "story_index": 3
+    },
+    {
+      "id": "candlestick",
+      "title": "如何看懂 K 線圖？",
+      "short_title": "K線圖入門",
+      "category": "technical",
+      "wiki_file": "wiki/technical-analysis/candlestick.md",
+      "summary": "開高低收四價模型、實體與影線解構，破除紅綠迷思與揭示歷史記錄限制。",
+      "x": 580,
+      "y": 140,
+      "story_index": 4
+    },
+    {
+      "id": "volume",
+      "title": "成交量與價量關係",
+      "short_title": "成交量與量價關係",
+      "category": "technical",
+      "wiki_file": "wiki/technical-analysis/volume.md",
+      "summary": "資金參與熱度與流動性檢驗，價漲量增等四大現象客觀解讀，防範冷門股風險。",
+      "x": 720,
+      "y": 220,
+      "story_index": 5
+    },
+    {
+      "id": "moving-average",
+      "title": "移動平均線（MA）",
+      "short_title": "移動平均線 MA",
+      "category": "technical",
+      "wiki_file": "wiki/technical-analysis/moving-average.md",
+      "summary": "各週期投資人平均持股成本，多空趨勢追蹤與時間落後性、盤整雙巴限制。",
+      "x": 580,
+      "y": 320,
+      "story_index": 6
+    },
+    {
+      "id": "rsi",
+      "title": "相對強弱指標（RSI）",
+      "short_title": "RSI 相對強弱指標",
+      "category": "technical",
+      "wiki_file": "wiki/technical-analysis/rsi.md",
+      "summary": "0~100 動能震盪強度，破除超買必跌迷思，認識強趨勢中的指標高低檔鈍化。",
+      "x": 720,
+      "y": 380,
+      "story_index": 7
+    },
+    {
+      "id": "macd",
+      "title": "平滑異同移動平均線（MACD）",
+      "short_title": "MACD 指標",
+      "category": "technical",
+      "wiki_file": "wiki/technical-analysis/macd.md",
+      "summary": "EMA 差離與柱狀圖動能伸縮，零軸多空格局，兼具趨勢與動能之落後指標。",
+      "x": 860,
+      "y": 300,
+      "story_index": 8
+    },
+    {
+      "id": "investment-risks",
+      "title": "股票投資有哪些風險？",
+      "short_title": "投資風險與防範",
+      "category": "risk",
+      "wiki_file": "wiki/risk-management/investment-risks.md",
+      "summary": "市場系統性、流動性與信用槓桿六大風險圖譜，防範飆股詐騙三大鐵律。",
+      "x": 420,
+      "y": 440,
+      "story_index": 9
+    },
+    {
+      "id": "summary",
+      "title": "總結：建立正確的投資觀念",
+      "short_title": "理性投資四大基石",
+      "category": "synthesis",
+      "wiki_file": "wiki/risk-management/information-verification.md",
+      "summary": "閒置資金、官方公開資訊查證、區分事實與推論、技術指標僅作輔助。",
+      "x": 260,
+      "y": 420,
+      "story_index": 10
+    }
+  ],
+  "edges": [
+    {
+      "source": "cover",
+      "target": "stock-basics",
+      "relation": "primary_next",
+      "label": "開始起步"
+    },
+    {
+      "source": "stock-basics",
+      "target": "tw-market-system",
+      "relation": "primary_next",
+      "label": "前置依賴：市場實踐"
+    },
+    {
+      "source": "tw-market-system",
+      "target": "candlestick",
+      "relation": "primary_next",
+      "label": "行情視覺化"
+    },
+    {
+      "source": "candlestick",
+      "target": "volume",
+      "relation": "primary_next",
+      "label": "必備搭配：價量合一"
+    },
+    {
+      "source": "volume",
+      "target": "moving-average",
+      "relation": "primary_next",
+      "label": "波段趨勢成本"
+    },
+    {
+      "source": "moving-average",
+      "target": "rsi",
+      "relation": "primary_next",
+      "label": "短線動能觀察"
+    },
+    {
+      "source": "rsi",
+      "target": "macd",
+      "relation": "primary_next",
+      "label": "動能與趨勢整合"
+    },
+    {
+      "source": "macd",
+      "target": "investment-risks",
+      "relation": "primary_next",
+      "label": "進入防守：風險警示"
+    },
+    {
+      "source": "investment-risks",
+      "target": "summary",
+      "relation": "primary_next",
+      "label": "總結歸納四大基石"
+    },
+    {
+      "source": "stock-basics",
+      "target": "investment-risks",
+      "relation": "cross_link",
+      "label": "權益與清償風險"
+    },
+    {
+      "source": "tw-market-system",
+      "target": "investment-risks",
+      "relation": "cross_link",
+      "label": "違約交割制度"
+    },
+    {
+      "source": "candlestick",
+      "target": "moving-average",
+      "relation": "cross_link",
+      "label": "收盤價平均延伸"
+    },
+    {
+      "source": "volume",
+      "target": "investment-risks",
+      "relation": "cross_link",
+      "label": "流動性枯竭風險"
+    },
+    {
+      "source": "moving-average",
+      "target": "macd",
+      "relation": "cross_link",
+      "label": "EMA 加權差離"
+    },
+    {
+      "source": "rsi",
+      "target": "macd",
+      "relation": "cross_link",
+      "label": "動能與震盪互證"
+    },
+    {
+      "source": "moving-average",
+      "target": "investment-risks",
+      "relation": "cross_link",
+      "label": "指標落後假訊號"
+    },
+    {
+      "source": "rsi",
+      "target": "investment-risks",
+      "relation": "cross_link",
+      "label": "鈍化逆勢摸頂風險"
+    },
+    {
+      "source": "summary",
+      "target": "cover",
+      "relation": "cross_link",
+      "label": "循環複習"
+    }
+  ]
+}

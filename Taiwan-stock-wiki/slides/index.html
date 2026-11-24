@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台股投資入門：從零開始學會看懂股票（Graph 知識圖譜導覽）</title>
+  <style>
+    :root {
+      --bg-primary: #0a0f1d;
+      --bg-secondary: #131d31;
+      --card-bg: rgba(19, 29, 49, 0.88);
+      --card-border: #243452;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --node-active-ring: rgba(56, 189, 248, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* 頂部全域導航列 */
+    #top-nav {
+      height: 54px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+    }
+
+    .brand-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+    }
+    .brand-tag {
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .breadcrumb-trail {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      max-width: 480px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .breadcrumb-item.active {
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mode-toggle-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .mode-toggle-btn:hover {
+      background: #334155;
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+    .mode-toggle-btn.active {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    /* 頂部進度條 */
+    #progress-container {
+      width: 100%;
+      height: 3px;
+      background: #1e293b;
+      position: absolute;
+      top: 54px;
+      left: 0;
+      z-index: 100;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 10%;
+      background: linear-gradient(90deg, #38bdf8, #818cf8, #a855f7);
+      transition: width 0.3s ease;
+    }
+
+    /* 簡報視圖主舞台 */
+    #main-viewport {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 54px - 60px);
+      overflow: hidden;
+    }
+
+    /* ================= 模式 A：幻燈片卡片視圖 ================= */
+    #slide-view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 30px 48px;
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    #slide-view.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98);
+    }
+
+    .slide-card-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .slide-header {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 14px;
+    }
+
+    .slide-category {
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .cat-basics { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .cat-market { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .cat-technical { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .cat-risk { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
+    .cat-synthesis { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+
+    .slide-title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .slide-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 12px;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card p, .card li {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      line-height: 1.65;
+    }
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    .card ul li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 8px;
+    }
+    .card ul li::before {
+      content: "•";
+      position: absolute;
+      left: 4px;
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    .alert-box {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-top: 14px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    .alert-box.danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-left: 4px solid #ef4444;
+      color: #fee2e2;
+    }
+    .alert-box.info {
+      background: rgba(56, 189, 248, 0.12);
+      border-left: 4px solid #38bdf8;
+      color: #e0f2fe;
+    }
+    .alert-box.warning {
+      background: rgba(245, 158, 11, 0.12);
+      border-left: 4px solid #f59e0b;
+      color: #fef3c7;
+    }
+
+    /* 流程圖與圖解 */
+    .step-pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 14px 0;
+      flex-wrap: wrap;
+    }
+    .step-node {
+      background: #1a253c;
+      border: 1px solid #2e4165;
+      padding: 10px 14px;
+      border-radius: 8px;
+      flex: 1;
+      min-width: 130px;
+      text-align: center;
+    }
+    .step-num {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      background: var(--accent-cyan);
+      color: #0f172a;
+      font-weight: 700;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      line-height: 22px;
+      margin-bottom: 4px;
+    }
+    .step-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #f1f5f9;
+    }
+    .step-desc {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+    .step-arrow {
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    /* 圖譜關聯分支導航區 (Graph Next-Hops) */
+    .graph-branch-panel {
+      margin-top: 18px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px dashed #334155;
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .branch-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .branch-btn {
+      background: #1e293b;
+      border: 1px solid #3b82f6;
+      color: #93c5fd;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .branch-btn:hover {
+      background: #2563eb;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .branch-btn.risk-btn {
+      border-color: #f43f5e;
+      color: #fda4af;
+    }
+    .branch-btn.risk-btn:hover {
+      background: #e11d48;
+      color: #fff;
+    }
+
+    /* 深入鑽取抽屜 (Drill-down Accordion) */
+    .drilldown-container {
+      margin-top: 14px;
+      border: 1px solid #283750;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #111a2d;
+    }
+    .drilldown-header {
+      padding: 10px 16px;
+      background: #17233c;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #38bdf8;
+      user-select: none;
+    }
+    .drilldown-header:hover {
+      background: #1e2d4c;
+    }
+    .drilldown-body {
+      padding: 14px 18px;
+      display: none;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+      border-top: 1px solid #283750;
+    }
+    .drilldown-body.open {
+      display: block;
+    }
+
+    /* 知識來源註記 */
+    .wiki-source-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: var(--accent-cyan);
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    /* ================= 模式 B：全域星系圖譜視圖 ================= */
+    #graph-view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      background: radial-gradient(circle at center, #111a2f 0%, #070b14 100%);
+    }
+    #graph-view.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #graph-svg {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+    #graph-svg:active {
+      cursor: grabbing;
+    }
+
+    .graph-hud {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px 16px;
+      backdrop-filter: blur(8px);
+      pointer-events: auto;
+      max-width: 320px;
+    }
+    .graph-hud h4 {
+      font-size: 0.9rem;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .graph-hud p {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .legend-panel {
+      position: absolute;
+      bottom: 16px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      gap: 14px;
+      font-size: 0.78rem;
+      pointer-events: auto;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* 圖譜節點樣式 */
+    .graph-node {
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .graph-node circle {
+      stroke-width: 2.5px;
+      transition: all 0.3s;
+    }
+    .graph-node:hover circle {
+      stroke-width: 4px;
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+    .graph-node text {
+      font-size: 12px;
+      fill: #f1f5f9;
+      font-weight: 600;
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+    .graph-edge {
+      stroke: #334155;
+      stroke-width: 1.8px;
+      transition: stroke 0.3s, stroke-width 0.3s;
+    }
+    .graph-edge.primary {
+      stroke: #0284c7;
+      stroke-width: 2.2px;
+      stroke-dasharray: 4, 2;
+    }
+    .graph-edge-label {
+      font-size: 9px;
+      fill: #64748b;
+      text-anchor: middle;
+      pointer-events: none;
+    }
+    .node-pulse-ring {
+      fill: none;
+      stroke: var(--accent-cyan);
+      stroke-width: 2px;
+      animation: pulse 2s infinite ease-out;
+    }
+    @keyframes pulse {
+      0% { r: 24px; opacity: 0.9; }
+      100% { r: 42px; opacity: 0; }
+    }
+
+    /* 底部通用導航控制列 */
+    #nav-controls {
+      height: 60px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 50;
+    }
+
+    .slide-counter {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .slide-counter span {
+      color: #fff;
+      font-size: 1.1rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .nav-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 7px 16px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--accent-cyan);
+      color: #0f172a;
+      border-color: var(--accent-cyan);
+    }
+    .nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* 響應式適配 */
+    @media (max-width: 768px) {
+      #slide-view { padding: 18px 16px 70px 16px; }
+      .slide-title { font-size: 1.5rem; }
+      .content-grid { grid-template-columns: 1fr; }
+      .step-pipeline { flex-direction: column; align-items: stretch; }
+      .step-arrow { transform: rotate(90deg); margin: 2px 0; }
+      .breadcrumb-trail { display: none; }
+      .legend-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部全域導航列 -->
+  <div id="top-nav">
+    <div class="brand-title">
+      <span>📈 Taiwan Stock Wiki</span>
+      <span class="brand-tag">Graph 導覽架構</span>
+    </div>
+
+    <!-- 探索麵包屑路徑 -->
+    <div class="breadcrumb-trail" id="breadcrumb">
+      <span class="breadcrumb-item">起點</span>
+    </div>
+
+    <div class="top-actions">
+      <button class="mode-toggle-btn" id="mode-toggle-btn" onclick="toggleViewMode()">
+        <span id="mode-icon">🕸️</span>
+        <span id="mode-text">切換星系圖譜 (G)</span>
+      </button>
+      <button class="mode-toggle-btn" onclick="toggleFullScreen()" title="全螢幕切換 (F)">
+        <span>⛶</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 進度條 -->
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <!-- 主舞台 -->
+  <div id="main-viewport">
+
+    <!-- 模式 A：幻燈片視圖 (Slide Card View) -->
+    <div id="slide-view">
+      <div class="slide-card-container" id="slide-content-root">
+        <!-- 動態渲染當前節點內容 -->
+      </div>
+    </div>
+
+    <!-- 模式 B：全域星系圖譜視圖 (Graph Canvas View) -->
+    <div id="graph-view">
+      <svg id="graph-svg"></svg>
+      <div class="graph-hud">
+        <h4>🕸️ 全域知識星系地圖</h4>
+        <p>• 點擊任一節點可直接切入該知識幻燈片。<br>• 藍色虛線為推薦主幹故事線，灰色細線為網狀概念交叉引用。</p>
+      </div>
+      <div class="legend-panel">
+        <div class="legend-item"><div class="legend-dot" style="background:#38bdf8;"></div> 股票基礎</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div> 市場制度</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div> 技術分析</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f43f5e;"></div> 風險防護</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a855f7;"></div> 核心總結</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 底部導航控制列 -->
+  <div id="nav-controls">
+    <div class="slide-counter">
+      主線節點：<span id="current-num">01</span> / <span id="total-num">10</span>
+    </div>
+
+    <div class="btn-group">
+      <button class="nav-btn" id="prev-btn" onclick="goToPrevPrimaryNode()">
+        <span>◀</span> 主線上一節
+      </button>
+      <button class="nav-btn" id="next-btn" onclick="goToNextPrimaryNode()">
+        主線下一節 <span>▶</span>
+      </button>
+    </div>
+
+    <div style="font-size:0.8rem; color:#64748b;">
+      快捷鍵：<code>←</code> <code>→</code> 主線導航 | <code>G</code> 圖譜切換 | <code>Space</code> 下一步
+    </div>
+  </div>
+
+  <!-- 數據模型與互動引擎 -->
+  <script>
+    // 1. 內嵌知識圖譜結構數據 (來自 Stage 1 & 2)
+    const KNOWLEDGE_GRAPH = {
+      nodes: [
+        {
+          id: "cover",
+          title: "台股投資入門：從零開始學會看懂股票",
+          short_title: "封面導讀",
+          category: "meta",
+          category_name: "導讀起手式",
+          wiki_file: "wiki/index.md",
+          summary: "以圖譜驅動（Graph-based）全新架構建立理性客觀的台股投資認知體系。",
+          story_index: 1,
+          x: 100, y: 260
+        },
+        {
+          id: "stock-basics",
+          title: "什麼是股票？",
+          short_title: "股票基本概念",
+          category: "basics",
+          category_name: "基礎知識篇",
+          wiki_file: "wiki/basics/stock-basics.md",
+          summary: "股份有限公司籌資憑證、股東所有權與有限清償責任，股價由供需撮合形成。",
+          story_index: 2,
+          x: 240, y: 160
+        },
+        {
+          id: "tw-market-system",
+          title: "台灣股票市場與交易制度",
+          short_title: "市場與交易制度",
+          category: "market",
+          category_name: "市場運作篇",
+          wiki_file: "wiki/market/tw-market-system.md",
+          summary: "上市櫃集中市場架構、標準交易四部曲、T+2交割與零股交易機制。",
+          story_index: 3,
+          x: 400, y: 100
+        },
+        {
+          id: "candlestick",
+          title: "如何看懂 K 線圖？",
+          short_title: "K線圖入門",
+          category: "technical",
+          category_name: "技術分析篇",
+          wiki_file: "wiki/technical-analysis/candlestick.md",
+          summary: "開高低收四價模型、實體與影線解構，破除紅綠迷思與揭示歷史記錄限制。",
+          story_index: 4,
+          x: 560, y: 100
+        },
+        {
+          id: "volume",
+          title: "成交量與價量關係",
+          short_title: "成交量與量價關係",
+          category: "technical",
+          category_name: "技術分析篇",
+          wiki_file: "wiki/technical-analysis/volume.md",
+          summary: "資金參與熱度與流動性檢驗，價漲量增等四大現象客觀解讀，防範冷門股風險。",
+          story_index: 5,
+          x: 720, y: 160
+        },
+        {
+          id: "moving-average",
+          title: "移動平均線（MA）",
+          short_title: "移動平均線 MA",
+          category: "technical",
+          category_name: "技術分析篇",
+          wiki_file: "wiki/technical-analysis/moving-average.md",
+          summary: "各週期投資人平均持股成本，多空趨勢追蹤與時間落後性、盤整雙巴限制。",
+          story_index: 6,
+          x: 560, y: 260
+        },
+        {
+          id: "rsi",
+          title: "相對強弱指標（RSI）",
+          short_title: "RSI 相對強弱指標",
+          category: "technical",
+          category_name: "技術分析篇",
+          wiki_file: "wiki/technical-analysis/rsi.md",
+          summary: "0~100 動能震盪強度，破除超買必跌迷思，認識強趨勢中的指標高低檔鈍化。",
+          story_index: 7,
+          x: 720, y: 340
+        },
+        {
+          id: "macd",
+          title: "平滑異同移動平均線（MACD）",
+          short_title: "MACD 指標",
+          category: "technical",
+          category_name: "技術分析篇",
+          wiki_file: "wiki/technical-analysis/macd.md",
+          summary: "EMA 差離與柱狀圖動能伸縮，零軸多空格局，兼具趨勢與動能之落後指標。",
+          story_index: 8,
+          x: 880, y: 260
+        },
+        {
+          id: "investment-risks",
+          title: "股票投資有哪些風險？",
+          short_title: "投資風險與防範",
+          category: "risk",
+          category_name: "風險管理篇",
+          wiki_file: "wiki/risk-management/investment-risks.md",
+          summary: "市場系統性、流動性與信用槓桿六大風險圖譜，防範飆股詐騙三大鐵律。",
+          story_index: 9,
+          x: 400, y: 380
+        },
+        {
+          id: "summary",
+          title: "總結：建立正確的投資觀念",
+          short_title: "理性投資四大基石",
+          category: "synthesis",
+          category_name: "核心總結篇",
+          wiki_file: "wiki/risk-management/information-verification.md",
+          summary: "閒置資金、官方公開資訊查證、區分事實與推論、技術指標僅作輔助。",
+          story_index: 10,
+          x: 240, y: 360
+        }
+      ],
+      edges: [
+        { source: "cover", target: "stock-basics", relation: "primary", label: "開始起步" },
+        { source: "stock-basics", target: "tw-market-system", relation: "primary", label: "前置依賴" },
+        { source: "tw-market-system", target: "candlestick", relation: "primary", label: "圖表化" },
+        { source: "candlestick", target: "volume", relation: "primary", label: "價量搭配" },
+        { source: "volume", target: "moving-average", relation: "primary", label: "趨勢成本" },
+        { source: "moving-average", target: "rsi", relation: "primary", label: "短線動能" },
+        { source: "rsi", target: "macd", relation: "primary", label: "指標整合" },
+        { source: "macd", target: "investment-risks", relation: "primary", label: "進入風控" },
+        { source: "investment-risks", target: "summary", relation: "primary", label: "歸納總結" },
+        // 跨主題網狀邊
+        { source: "stock-basics", target: "investment-risks", relation: "cross", label: "清償風險" },
+        { source: "tw-market-system", target: "investment-risks", relation: "cross", label: "違約交割" },
+        { source: "candlestick", target: "moving-average", relation: "cross", label: "收盤平均" },
+        { source: "volume", target: "investment-risks", relation: "cross", label: "流動性風險" },
+        { source: "moving-average", target: "macd", relation: "cross", label: "EMA差離" },
+        { source: "rsi", target: "macd", relation: "cross", label: "動能驗證" },
+        { source: "moving-average", target: "investment-risks", relation: "cross", label: "假訊號風險" },
+        { source: "rsi", target: "investment-risks", relation: "cross", label: "鈍化風險" }
+      ]
+    };
+
+    // 2. 投影片各節點詳細卡片內容庫 (Stage 3 產物)
+    const SLIDE_CONTENTS = {
+      "cover": {
+        html: `
+          <div style="text-align:center; padding: 40px 0;">
+            <div style="display:inline-block; background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); padding:4px 14px; border-radius:16px; font-size:0.85rem; font-weight:700; margin-bottom:18px;">
+              Taiwan Stock Wiki 知識圖譜驅動版
+            </div>
+            <h1 style="font-size:3rem; font-weight:800; line-height:1.2; margin-bottom:16px; color:#fff;">
+              台股投資入門<br><span style="color:#38bdf8;">從零開始學會看懂股票</span>
+            </h1>
+            <p style="font-size:1.15rem; color:#94a3b8; max-width:680px; margin:0 auto 30px auto; line-height:1.6;">
+              打破傳統「單向翻頁」限制，結合有向圖譜（DAG）模型，自由穿梭於股票本質、市場制度、量價指標與風控體系。
+            </p>
+            <div class="alert-box info" style="max-width:640px; margin:0 auto;">
+              💡 <strong>Graph 導覽秘技</strong>：隨時按下鍵盤 <code>G</code> 鍵，可隨時展開全域知識星空圖譜，從上帝視角俯瞰知識關聯。
+            </div>
+          </div>
+        `,
+        drilldown: "本系統數據直接提取自專案 Markdown Wiki 文件。每個節點皆對應真實的 Wiki 頁面，無任何捏造數據與空泛案例。"
+      },
+      "stock-basics": {
+        html: `
+          <div class="content-grid">
+            <div class="card">
+              <h3>🏢 股票與股東的本質</h3>
+              <ul>
+                <li><strong>所有權憑證</strong>：股票是股份有限公司發行，代表股東擁有公司部分資產與權益。</li>
+                <li><strong>股東核心權益</strong>：享有盈餘分派權（股利）與股東會表決權。</li>
+                <li><strong>有限清償責任</strong>：公司若清算，股東最大損失僅限於所投入之本金，不連帶負擔其他債務。</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>💰 公司為何發行股票？</h3>
+              <ul>
+                <li><strong>募集長期資本</strong>：用於建廠、研發與擴展業務，屬於股權資本而非銀行債務。</li>
+                <li><strong>共同承擔經營成果</strong>：公司獲利時可分派股利；但經營不佳時股價亦會下跌，<strong>絕不保證獲利</strong>。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="card">
+            <h3>⚖️ 股價是如何形成的？（重大觀念）</h3>
+            <p>成交價是由<strong>買方（Bid）與賣方（Ask）在集中市場透過電腦撮合</strong>而成。受公司基本面、產業循環、總體經濟、政策與市場情緒交互影響。<strong>股票價格不等於公司固定價值</strong>。</p>
+          </div>
+          <div class="alert-box info">
+            💡 <strong>初學者核心心態</strong>：先理解公司商品與商業模式，再研究股票價格；切勿將「公司營運表現」與「短期市場股價波動」混為一談。
+          </div>
+        `,
+        drilldown: "【股東會與除權息法規】依台灣公司法規定，公司盈餘分派需經董事會擬定及股東常會決議。股利可分為現金股利與股票股利，並設有除息日與除權日機制。"
+      },
+      "tw-market-system": {
+        html: `
+          <div class="step-pipeline">
+            <div class="step-node"><div class="step-num">1</div><div class="step-title">開立雙帳戶</div><div class="step-desc">證券戶(存股)+交割戶(存款)</div></div>
+            <div class="step-arrow">➔</div>
+            <div class="step-node"><div class="step-num">2</div><div class="step-title">委託下單</div><div class="step-desc">指定代號、張數/股數、價格</div></div>
+            <div class="step-arrow">➔</div>
+            <div class="step-node"><div class="step-num">3</div><div class="step-title">撮合成交</div><div class="step-desc">證交所主機依價格/時間優先</div></div>
+            <div class="step-arrow">➔</div>
+            <div class="step-node"><div class="step-num">4</div><div class="step-title">結算交割</div><div class="step-desc">T+2 日上午 10:00 前完成扣撥</div></div>
+          </div>
+          <div class="content-grid">
+            <div class="card">
+              <h3>🏛️ 台股兩大交易板塊</h3>
+              <ul>
+                <li><strong>上市市場（TWSE）</strong>：由臺灣證券交易所管理，多為規模龐大、營運成熟的大型企業。</li>
+                <li><strong>上櫃市場（TPEx）</strong>：由櫃檯買賣中心管理，多為具備成長動能之中小型新興企業。</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>🧩 零股交易制度（友善小資）</h3>
+              <ul>
+                <li>台股傳統交易以 1,000 股為 1 張整股。</li>
+                <li><strong>1 ~ 999 股為零股</strong>，現行提供「盤中零股」與「盤後零股」，讓初學者幾百元即可參與優質標的。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="alert-box danger">
+            ⚠️ <strong>重大法規警示：何謂違約交割？</strong><br>
+            買進股票成交後，若未能在 <strong>T+2 日上午 10:00 前</strong>將應付價款存入交割帳戶，將構成違約交割！將導致證券帳戶遭凍結、聯徵留下嚴重信用污點，並面臨民事賠償與刑事責任追訴。
+          </div>
+        `,
+        drilldown: "【逐筆撮合機制】現行台股盤中普通交易採用「逐筆撮合（Continuous Trading）」，委託單種類包含限價（ROD/IOC/FOK）與市價單，較傳統集合競價更具即時成交效率。"
+      },
+      "candlestick": {
+        html: `
+          <div class="content-grid">
+            <div class="card">
+              <h3>🕯️ K 線的解剖構造</h3>
+              <p>每一根 K 線記錄特定期間內（如 1 天）四個關鍵價格：開盤價、最高價、最低價、收盤價。</p>
+              <div style="margin-top:12px; font-size:0.9rem; line-height:1.7;">
+                <p>• <strong>實體（Body）</strong>：開盤價與收盤價之間的區間長度。</p>
+                <p>• <strong>上影線</strong>：實體往上延伸至最高價，代表上方遭遇賣壓壓回。</p>
+                <p>• <strong>下影線</strong>：實體往下延伸至最低價，代表低檔有買盤逢低承接。</p>
+              </div>
+            </div>
+            <div class="card">
+              <h3>🚨 台股紅綠迷思破除（關鍵觀念）</h3>
+              <ul>
+                <li><strong>紅 K（陽線）</strong>：僅代表<strong>「收盤價 ＞ 開盤價」</strong>。若跳空大跌後小幅反彈，收盤仍可能低於前一日收盤價（帳面依然顯示下跌）！</li>
+                <li><strong>綠 K（陰線）</strong>：僅代表<strong>「收盤價 ＜ 開盤價」</strong>。若跳空大漲後拉回，收盤仍可能高於前一日收盤價。</li>
+                <li>美股慣例通常以「綠漲紅跌」表示，切勿混淆色彩定義。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="alert-box danger">
+            🛑 <strong>K 線分析的絕對限制</strong>：K 線僅記錄過去已經發生的成交紀錄，<strong>無法單獨解釋價格變動背後的原因，更絕對無法保證預測明天走勢</strong>！在小型冷門股中更易受少數主力資金刻意作價誤導。
+          </div>
+        `,
+        drilldown: "【十字線（Doji）與實體幅度】當開盤價與收盤價完全相同時呈現十字線，代表多空拉鋸處於僵局；長實體則反映該時段內單邊推進動能強烈。"
+      },
+      "volume": {
+        html: `
+          <div class="card" style="margin-bottom:16px;">
+            <h3>🌊 成交量（Volume）反映什麼？</h3>
+            <p>成交量是指特定期間內市場上買賣雙方實際撮合成交的股份總數。量反映了市場資金參與深度；俗稱「量是價的先行指標」，但必須搭配價格相對位置綜合判讀。</p>
+          </div>
+          <div class="content-grid">
+            <div class="card">
+              <h3>📈 四大價量現象客觀解讀</h3>
+              <ul>
+                <li><strong>價漲量增</strong>：價格上升時交易熱絡、資金進場；但<strong>不保證</strong>未來必定續漲。</li>
+                <li><strong>價跌量增</strong>：價格下跌時賣壓沉重或大幅換手；需追查是否有營運重大事件。</li>
+                <li><strong>價漲量縮</strong>：追價意願減退，或籌碼極度集中惜售。</li>
+                <li><strong>價跌量縮</strong>：殺跌意願趨緩，或市場呈現觀望冷清。</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>🔍 初學者的量能警示</h3>
+              <ul>
+                <li><strong>避開冷門股的流動性風險</strong>：若一檔個股每日成交僅幾十張，可能面臨「買得到卻賣不掉」的折價危機。</li>
+                <li><strong>當沖帶來的虛量膨脹</strong>：現股當沖盛行，當日買進當日沖銷的量並不代表長線資金在沉澱。</li>
+                <li><strong>高檔爆量不等於好消息</strong>：大漲數倍後的歷史天量，常為早期大戶趁熱出貨給大眾的訊號。</li>
+              </ul>
+            </div>
+          </div>
+        `,
+        drilldown: "【成交量均線（MV）】技術分析中常使用 5 日成交量均線（MV5）與 20 日成交量均線（MV20）作為評判量能放大或萎縮的相對基準，而非只看絕對張數。"
+      },
+      "moving-average": {
+        html: `
+          <div class="content-grid">
+            <div class="card">
+              <h3>📉 均線的核心計算原理</h3>
+              <p>將過去 $N$ 天的收盤價格加總後除以 $N$，隨著交易日推進連成平滑曲線。它代表了這段時間內所有買進者的<strong>平均持股成本</strong>。</p>
+              <div style="margin-top:10px; font-size:0.88rem; line-height: 1.7;">
+                <p>• <strong>MA5（週線）</strong>：反映一週內極短線多空力道。</p>
+                <p>• <strong>MA20（月線）</strong>：短波段操作的多空重要生命線。</p>
+                <p>• <strong>MA60（季線）</strong>：中期趨勢多頭或空頭的關鍵分界。</p>
+                <p>• <strong>MA240（年線）</strong>：長期景氣與牛熊循環的分水嶺。</p>
+              </div>
+            </div>
+            <div class="card">
+              <h3>⚡ 多空排列與交叉訊號</h3>
+              <ul>
+                <li><strong>多頭排列</strong>：短天期均線在上方、長天期在下方，斜率向上，代表多方趨勢強勁。</li>
+                <li><strong>空頭排列</strong>：短天期在下方、長天期在上方，斜率向下。</li>
+                <li><strong>黃金交叉 vs 死亡交叉</strong>：短均線向上穿過長均線為黃金交叉；反之為死亡交叉。但<strong>絕非保證獲利訊號</strong>。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="alert-box danger">
+            ⚠️ <strong>均線的先天盲點：時間滯後性與盤整失靈</strong><br>
+            1. 均線由歷史收盤價算出，轉折<strong>必定落後於價格本身</strong>。<br>
+            2. 當股價處於無趨勢的區間盤整時，均線會反覆纏繞交錯，盲目照訊號交易極易遭遇頻繁停損的「雙巴行情」。
+          </div>
+        `,
+        drilldown: "【葛蘭碧八大法則】均線技術分析經典理論，包含突破買點、假跌破支撐買點、回檔支撐買點、乖離過大買點，以及對應的四大賣點，本質上皆為均線與價格乖離的循環描述。"
+      },
+      "rsi": {
+        html: `
+          <div class="content-grid">
+            <div class="card">
+              <h3>🧭 RSI 在測量什麼？</h3>
+              <p>RSI（0 ~ 100）是動能指標，評估特定天數內（如 6 天或 14 天）<strong>價格上漲幅度相對於下跌幅度的強度比值</strong>。</p>
+              <div style="margin-top:14px; padding:12px; background:#0b1325; border-radius:6px; font-size:0.85rem;">
+                <p style="color:#22c55e;">• <strong>RSI < 30</strong>：傳統超賣區（市場悲觀過度）</p>
+                <p style="color:#94a3b8;">• <strong>RSI = 50</strong>：多空均衡中軸分水嶺</p>
+                <p style="color:#ef4444;">• <strong>RSI > 70</strong>：傳統超買區（短線買盤亢奮過熱）</p>
+              </div>
+            </div>
+            <div class="card">
+              <h3>🚨 核心觀念：超買超賣之迷思破除</h3>
+              <ul>
+                <li><strong>重大謬誤</strong>：初學者常誤以為「RSI 破 70 就要放空/賣出、跌破 30 就要搶進」。</li>
+                <li><strong>指標鈍化現象</strong>：在極強主升段趨勢中，強勢股 RSI 可以在 70~90 維持數週（高檔鈍化）；在崩跌市場中，亦會在低檔長期徘徊。</li>
+                <li>盲目在超買區放空，常面臨被強烈多頭軋空的巨大風險。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="alert-box danger">
+            🛑 <strong>使用原則</strong>：超買代表多方動能極強，不可盲目猜頂！使用 RSI 必須搭配均線趨勢與成交量，切勿單一依賴數值操作。
+          </div>
+        `,
+        drilldown: "【RSI 背離（Divergence）】當價格持續創下波段新高，但 RSI 指標高點卻逐步走低，稱為「頂背離」，提示推升力道可能減速；反之股價創低而指標不破底稱為「底背離」。背離同樣可能持續數次，不可單一盲從。"
+      },
+      "macd": {
+        html: `
+          <div class="content-grid">
+            <div class="card">
+              <h3>📐 MACD 的三大核心構造</h3>
+              <ul>
+                <li><strong>DIF 快線（差離值）</strong>：通常為 12日 EMA 減去 26日 EMA，反映短期價格加速度。</li>
+                <li><strong>DEM / MACD 慢線（訊號線）</strong>：DIF 的 9日 EMA 平滑線。</li>
+                <li><strong>OSC 柱狀圖（Histogram）</strong>：快線減慢線的差額，呈現多空動能的擴張與收斂。</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>📊 客觀趨勢判讀準則</h3>
+              <ul>
+                <li><strong>零軸之上（多頭格局）</strong>：雙線運行在零軸上方，代表中長期趨勢偏多。</li>
+                <li><strong>零軸之下（空頭格局）</strong>：雙線在零軸下方，代表中長期走勢偏弱。</li>
+                <li><strong>柱狀圖縮短</strong>：代表推升或下跌的動能在逐漸減速。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="alert-box warning">
+            ⚠️ <strong>MACD 的限制與缺點</strong>：<br>
+            1. 雖然採用加權平滑改善了速度，底層仍為均線衍生，本質依舊是<strong>落後指標</strong>。<br>
+            2. 橫盤震盪期間，快慢線會緊貼零軸上下打結，頻繁產生虛假訊號。<br>
+            3. 指標交叉只是數學公式計算，<strong>絕非未來股價保證獲利的預言</strong>。
+          </div>
+        `,
+        drilldown: "【EMA 指數移動平均權重】EMA 與一般 SMA 最大的差異在於給予「近期價格」較高的權重，因此轉向反應比簡單移動平均線略為敏銳，但在洗盤劇烈時依然難以避免虛假雜訊。"
+      },
+      "investment-risks": {
+        html: `
+          <div class="content-grid">
+            <div class="card">
+              <h3>🌪️ 客觀存在的核心投資風險</h3>
+              <ul>
+                <li><strong>市場系統性風險</strong>：通膨、升息、國際戰事導致大盤全面下挫，無法靠分散個股避開。</li>
+                <li><strong>個別公司與產業風險</strong>：公司財報不善、管理弊案、新技術取代舊產業。</li>
+                <li><strong>流動性風險</strong>：冷門股票掛單稀少，急需資金時無法即時變現。</li>
+                <li><strong>槓桿與信用風險</strong>：融資借錢買股面臨斷頭清算；當沖沖不掉面臨違約交割。</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>🛡️ 防範投資詐騙的三大鐵律</h3>
+              <ul>
+                <li><strong>對「保證獲利、穩賺不賠」保持絕對警惕</strong>：法規明訂合法金融機構不得承諾保證收益。</li>
+                <li><strong>堅決拒絕「飆股群組與內線管道」</strong>：不加入通訊軟體陌生私密投資群，不匯款至私人帳戶。</li>
+                <li><strong>絕不交付密碼與驗證碼</strong>：合法券商營業員絕不會向客戶索取登入密碼或 OTP 動態碼。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="alert-box danger">
+            🛑 <strong>認知邊界</strong>：投資的本質就伴隨著不確定性！風險管理的目的是「將潛在損失控制在承受範圍內」，而非消滅所有風險。
+          </div>
+        `,
+        drilldown: "【信用交易維持率】依證交所規定，整戶融資融券擔保維持率低於 130% 時，券商將發布追繳通知書；若未在期限內補繳保證金，券商將在開盤直接處分擔保品（俗稱斷頭）。"
+      },
+      "summary": {
+        html: `
+          <div class="content-grid">
+            <div class="card">
+              <h3>1. 堅持使用閒置資金</h3>
+              <p>絕不借貸炒股、絕不將生活必須資金投入股市。預留 6 個月以上緊急預備金，才能在市場大幅波動時保持客觀理性，避免被迫砍在低點。</p>
+            </div>
+            <div class="card">
+              <h3>2. 建立官方資訊查證習慣</h3>
+              <p>看見任何社群利多或名牌消息，第一時間回到<strong>「公開資訊觀測站（MOPS）」</strong>與<strong>「臺灣證券交易所（TWSE）」</strong>核實公司重大訊息與真實財報。</p>
+            </div>
+            <div class="card">
+              <h3>3. 嚴格區分事實與推論</h3>
+              <p>公司公告自結營收是<strong>客觀事實（Fact）</strong>；名嘴預測「目標價看翻倍」是<strong>主觀推論（Inference）</strong>。投資決策必須立足於真實數據，而非他人預測。</p>
+            </div>
+            <div class="card">
+              <h3>4. 技術指標僅為客觀輔助</h3>
+              <p>技術指標是過去歷史價格的數學轉換，**不能保證預測未來**。永遠把「風險控管與本金保護」放在追求報酬率之前。</p>
+            </div>
+          </div>
+          <div class="alert-box info">
+            🎓 <strong>結語</strong>：股市不是短跑賭局，而是考驗心態、紀律與持續學習的馬拉松。祝大家在 Taiwan Stock Wiki 的陪伴下，步步穩健成長！
+          </div>
+        `,
+        drilldown: "【公開資訊觀測站（MOPS）三大必查功能】1. 重大訊息公告（澄清媒體報導與董事會決議）；2. 財務報表專區（會計師查核之季報與年報）；3. 每月營收公告（每月10日前強制公布上月營收）。"
+      }
+    };
+
+    // 3. 狀態變數
+    let activeNodeId = "cover";
+    let isGraphMode = false;
+    let visitedHistory = ["cover"];
+
+    // 4. 初始化畫布與主舞台
+    function init() {
+      renderSlideCard(activeNodeId);
+      renderSvgGraph();
+      updateProgress();
+      updateBreadcrumb();
+    }
+
+    // 5. 渲染幻燈片內容卡片 (模式 A)
+    function renderSlideCard(nodeId) {
+      const node = KNOWLEDGE_GRAPH.nodes.find(n => n.id === nodeId);
+      const content = SLIDE_CONTENTS[nodeId];
+      if (!node || !content) return;
+
+      const outgoingEdges = KNOWLEDGE_GRAPH.edges.filter(e => e.source === nodeId);
+
+      let branchButtonsHtml = "";
+      outgoingEdges.forEach(e => {
+        const targetNode = KNOWLEDGE_GRAPH.nodes.find(n => n.id === e.target);
+        if (targetNode) {
+          const isRisk = targetNode.category === "risk";
+          const btnClass = isRisk ? "branch-btn risk-btn" : "branch-btn";
+          branchButtonsHtml += `
+            <button class="${btnClass}" onclick="navigateToNode('${targetNode.id}')">
+              <span>➔ [${e.label}]</span> <strong>${targetNode.short_title}</strong>
+            </button>
+          `;
+        }
+      });
+
+      const root = document.getElementById('slide-content-root');
+      root.innerHTML = `
+        <div class="slide-header">
+          <div>
+            <div class="slide-category cat-${node.category}">${node.category_name}</div>
+            <h2 class="slide-title">${node.title}</h2>
+            <div class="slide-subtitle">${node.summary}</div>
+          </div>
+        </div>
+
+        ${content.html}
+
+        <!-- 深入鑽取抽屜 -->
+        <div class="drilldown-container">
+          <div class="drilldown-header" onclick="toggleDrilldown(this)">
+            <span>🔍 深入鑽取 / 指標細節與底層法規 (Drill-down)</span>
+            <span class="drilldown-arrow">▼</span>
+          </div>
+          <div class="drilldown-body">
+            ${content.drilldown}
+          </div>
+        </div>
+
+        <!-- 圖譜關聯分支導航區 (Graph Next-Hops) -->
+        <div class="graph-branch-panel">
+          <div class="branch-label">
+            <span>🕸️ 圖譜推薦下一步：</span>
+          </div>
+          ${branchButtonsHtml || '<span style="font-size:0.85rem; color:#64748b;">(已達圖譜邊界終點)</span>'}
+        </div>
+
+        <!-- 底部來源標記 -->
+        <div class="wiki-source-footer">
+          <span>主題節點：${node.short_title}</span>
+          <span class="source-badge">📚 知識來源：${node.wiki_file}</span>
+        </div>
+      `;
+
+      // 滾動回頂部
+      document.getElementById('slide-view').scrollTop = 0;
+    }
+
+    function toggleDrilldown(headerEl) {
+      const bodyEl = headerEl.nextElementSibling;
+      const arrowEl = headerEl.querySelector('.drilldown-arrow');
+      if (bodyEl.classList.contains('open')) {
+        bodyEl.classList.remove('open');
+        arrowEl.textContent = '▼';
+      } else {
+        bodyEl.classList.add('open');
+        arrowEl.textContent = '▲';
+      }
+    }
+
+    // 6. 渲染全域星系圖譜 SVG (模式 B)
+    function renderSvgGraph() {
+      const svg = document.getElementById('graph-svg');
+      svg.innerHTML = '';
+
+      // 繪製連線 (Edges)
+      KNOWLEDGE_GRAPH.edges.forEach(e => {
+        const sNode = KNOWLEDGE_GRAPH.nodes.find(n => n.id === e.source);
+        const tNode = KNOWLEDGE_GRAPH.nodes.find(n => n.id === e.target);
+        if (!sNode || !tNode) return;
+
+        const isPrimary = e.relation === "primary";
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", sNode.x);
+        line.setAttribute("y1", sNode.y);
+        line.setAttribute("x2", tNode.x);
+        line.setAttribute("y2", tNode.y);
+        line.setAttribute("class", `graph-edge ${isPrimary ? 'primary' : ''}`);
+        line.setAttribute("id", `edge-${e.source}-${e.target}`);
+        svg.appendChild(line);
+
+        // 標籤文字
+        const midX = (sNode.x + tNode.x) / 2;
+        const midY = (sNode.y + tNode.y) / 2 - 5;
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", midX);
+        text.setAttribute("y", midY);
+        text.setAttribute("class", "graph-edge-label");
+        text.textContent = e.label;
+        svg.appendChild(text);
+      });
+
+      // 繪製節點 (Nodes)
+      KNOWLEDGE_GRAPH.nodes.forEach(n => {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("class", "graph-node");
+        g.setAttribute("id", `node-g-${n.id}`);
+        g.setAttribute("onclick", `navigateToNode('${n.id}')`);
+
+        // 分類顏色
+        let color = "#38bdf8";
+        if (n.category === "market") color = "#f59e0b";
+        else if (n.category === "technical") color = "#10b981";
+        else if (n.category === "risk") color = "#f43f5e";
+        else if (n.category === "synthesis") color = "#a855f7";
+
+        // 當前活動節點的光環效果
+        if (n.id === activeNodeId) {
+          const pulseRing = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          pulseRing.setAttribute("cx", n.x);
+          pulseRing.setAttribute("cy", n.y);
+          pulseRing.setAttribute("class", "node-pulse-ring");
+          g.appendChild(pulseRing);
+        }
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", n.x);
+        circle.setAttribute("cy", n.y);
+        circle.setAttribute("r", n.id === activeNodeId ? "22" : "18");
+        circle.setAttribute("fill", "#131d31");
+        circle.setAttribute("stroke", color);
+        g.appendChild(circle);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", n.x);
+        text.setAttribute("y", n.y + 30);
+        text.textContent = n.short_title;
+        g.appendChild(text);
+
+        // 節點編號
+        const numText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        numText.setAttribute("x", n.x);
+        numText.setAttribute("y", n.y);
+        numText.setAttribute("font-size", "10px");
+        numText.setAttribute("fill", color);
+        numText.textContent = n.story_index;
+        g.appendChild(numText);
+
+        svg.appendChild(g);
+      });
+    }
+
+    // 7. 節點切換與導航核心邏輯
+    function navigateToNode(nodeId) {
+      if (nodeId === activeNodeId && !isGraphMode) return;
+
+      activeNodeId = nodeId;
+      if (!visitedHistory.includes(nodeId)) {
+        visitedHistory.push(nodeId);
+      }
+
+      renderSlideCard(nodeId);
+      renderSvgGraph();
+      updateProgress();
+      updateBreadcrumb();
+
+      // 若在圖譜模式下點擊節點，可平滑返回幻燈片視圖
+      if (isGraphMode) {
+        toggleViewMode();
+      }
+    }
+
+    function goToNextPrimaryNode() {
+      const currentNode = KNOWLEDGE_GRAPH.nodes.find(n => n.id === activeNodeId);
+      if (!currentNode) return;
+      const nextNode = KNOWLEDGE_GRAPH.nodes.find(n => n.story_index === currentNode.story_index + 1);
+      if (nextNode) {
+        navigateToNode(nextNode.id);
+      }
+    }
+
+    function goToPrevPrimaryNode() {
+      const currentNode = KNOWLEDGE_GRAPH.nodes.find(n => n.id === activeNodeId);
+      if (!currentNode) return;
+      const prevNode = KNOWLEDGE_GRAPH.nodes.find(n => n.story_index === currentNode.story_index - 1);
+      if (prevNode) {
+        navigateToNode(prevNode.id);
+      }
+    }
+
+    function updateProgress() {
+      const currentNode = KNOWLEDGE_GRAPH.nodes.find(n => n.id === activeNodeId);
+      const total = KNOWLEDGE_GRAPH.nodes.length;
+      const idx = currentNode ? currentNode.story_index : 1;
+
+      document.getElementById('current-num').textContent = String(idx).padStart(2, '0');
+      document.getElementById('total-num').textContent = String(total).padStart(2, '0');
+
+      const percent = (idx / total) * 100;
+      document.getElementById('progress-bar').style.width = `${percent}%`;
+
+      document.getElementById('prev-btn').disabled = (idx === 1);
+      document.getElementById('next-btn').disabled = (idx === total);
+    }
+
+    function updateBreadcrumb() {
+      const trailEl = document.getElementById('breadcrumb');
+      trailEl.innerHTML = '';
+      visitedHistory.forEach((nId, i) => {
+        const node = KNOWLEDGE_GRAPH.nodes.find(n => n.id === nId);
+        if (!node) return;
+        const span = document.createElement('span');
+        span.className = `breadcrumb-item ${nId === activeNodeId ? 'active' : ''}`;
+        span.textContent = node.short_title;
+        span.style.cursor = 'pointer';
+        span.onclick = () => navigateToNode(nId);
+        trailEl.appendChild(span);
+
+        if (i < visitedHistory.length - 1) {
+          const arrow = document.createElement('span');
+          arrow.textContent = ' > ';
+          arrow.style.color = '#475569';
+          trailEl.appendChild(arrow);
+        }
+      });
+    }
+
+    // 8. 視圖模式切換 (Slide vs Graph)
+    function toggleViewMode() {
+      isGraphMode = !isGraphMode;
+      const slideView = document.getElementById('slide-view');
+      const graphView = document.getElementById('graph-view');
+      const toggleBtn = document.getElementById('mode-toggle-btn');
+      const modeIcon = document.getElementById('mode-icon');
+      const modeText = document.getElementById('mode-text');
+
+      if (isGraphMode) {
+        slideView.classList.add('hidden');
+        graphView.classList.add('active');
+        toggleBtn.classList.add('active');
+        modeIcon.textContent = '📄';
+        modeText.textContent = '返回幻燈片 (G)';
+      } else {
+        slideView.classList.remove('hidden');
+        graphView.classList.remove('active');
+        toggleBtn.classList.remove('active');
+        modeIcon.textContent = '🕸️';
+        modeText.textContent = '切換星系圖譜 (G)';
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn(`Fullscreen error: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // 9. 鍵盤事件監聽
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        goToNextPrimaryNode();
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+        e.preventDefault();
+        goToPrevPrimaryNode();
+      } else if (e.key === 'g' || e.key === 'G') {
+        e.preventDefault();
+        toggleViewMode();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    });
+
+    // 10. 手機滑動監聽 (Touch Swipe)
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const viewport = document.getElementById('main-viewport');
+
+    viewport.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    viewport.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const deltaX = touchEndX - touchStartX;
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX < 0) goToNextPrimaryNode();
+        else goToPrevPrimaryNode();
+      }
+    }, { passive: true });
+
+    // 啟動初始化
+    init();
+  </script>
+</body>
+</html>
